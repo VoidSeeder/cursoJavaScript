@@ -1,2 +1,6 @@
 Referências: developer.mozilla.org
 
+Existe diferença entre:
+    - aspas duplas (" ")
+    - aspas simples (' ')
+    - crase (´ ´)

@@ -4,31 +4,45 @@
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Primeiros passos com DOM</title>
+	<title>Eventos DOM</title>
 	<style>
-		body {
-			background: dimgray;
+		div#area {
+			font: normal 20pt Arial;
+			background: dodgerblue;
 			color: white;
-			font: normal 18pt Arial;
+			width: 200px;
+			height: 200px;
+			line-height: 200px;
+			text-align: center;
+		}
+		body {
+			background: gray;
 		}
 	</style>
 </head>
 <body>
-	<h1>Iniciando estudos com DOM</h1>
-	<p id="msg" name="msg" class="msg">Aqui vai o resultado</p>
-	<p>Aprendendo a usar a <strong>DOM</strong> em JavaScript.</p>
-	<div>Clique em mim</div>
-
+	<div id="area">
+		Interaja...
+	</div>
 	<script>
-		var p1 = window.document.getElementsByTagName("p")[0];
-		p1 = window.document.getElementById("msg");
-		p1 = window.document.getElementsByName("msg")[0];
-		p1 = window.document.getElementsByClassName("msg")[0];
-		p1 = window.document.querySelector('p#msg'); //id = #
-		p1 = window.document.querySelector('p.msg'); //class = .
+		var area = window.document.getElementById("area");
+		area.addEventListener("click", clicar);
+		area.addEventListener("mouseenter", entrar);
+		area.addEventListener("mouseout", sair);
 
-		p1.style.color = "blue";
-		window.document.write(p1.innerText);
+		function clicar() {
+			area.innerText = "Clicou!";
+			area.style.background = "red";
+		}
+
+		function entrar() {
+			area.innerText = "Entrou!";
+		}
+
+		function sair() {
+			area.innerText = "Saiu!";
+			area.style.background = "dodgerblue";
+		}
 	</script>
 </body>
 </html>

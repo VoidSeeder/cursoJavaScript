@@ -18,3 +18,10 @@ Template string (substitui concatenação simples com +):
     - Variaveis em ${}
     - Ele NÃO atualiza o valor após usado
     - Exemplo: `Meu nome é ${nome} tenho ${idade} anos`
+
+Number:
+    - Number.toFixed(numeroDeCasas)
+    - Number.toFixed(numeroDeCasas).replace('.', ',');
+    - Number.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+        - pt-BR substitui ponto por virgula (vise-versa)
+        - BRL é a moeda (USD, EUR, ...)

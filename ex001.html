@@ -1,28 +1,22 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Meu primeiro programa...</title>
+	<title>Document</title>
 	<style>
 		body {
-			background-color: rgb(176, 176, 199);
-			color: white; /* comentario CSS */
-			font: normal 20pt Times;
-		}
-		h1 {
-			color: yellow;
+			font: normal 20pt Arial;
 		}
 	</style>
 </head>
 <body>
-	<h1>Olá, mundo!</h1><!-- comentario HTML-->
 	<script>
-		var numero1 = Number(window.prompt("Digite um numero: "));
-		var numero2 = Number(window.prompt("Digite outro numero: "));
-		var soma = numero1 + numero2;
-		window.alert(`A soma entre ${numero1} e ${numero2} é igual a ${soma}.`);
+		var nome = window.prompt("Qual é o seu nome?");
+		document.write(`Olá, <strong>${nome}</strong>! Seu nome tem ${nome.length} letras.<br/>`);
+		document.write(`Seu nome em maiúsculas é ${nome.toUpperCase()}.<br/>`);
+		document.write(`Seu nome em minúculas é ${nome.toLowerCase()}.<br/>`);
 	</script>
 </body>
 </html>

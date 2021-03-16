@@ -1,6 +1,20 @@
 Referências: developer.mozilla.org
 
 Existe diferença entre:
-    - aspas duplas (" ")
-    - aspas simples (' ')
-    - crase (´ ´)
+    - aspas duplas (" ") igual a aspas simples (' ')
+    - crase (´ ´) para template string
+
+Conversão string para number:
+    - Number(string) = ele descobre se é float ou int e converte
+    - Number.parseInt(string) = converte para int
+    - Number.parseFloar(string) = converte para float
+
+Conversão number para string:
+    - String(number)
+    - number.toString()
+
+Template string (substitui concatenação simples com +):
+    - Com crase
+    - Variaveis em ${}
+    - Ele NÃO atualiza o valor após usado
+    - Exemplo: `Meu nome é ${nome} tenho ${idade} anos`

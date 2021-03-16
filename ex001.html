@@ -8,7 +8,7 @@
 	<style>
 		body {
 			background-color: rgb(176, 176, 199);
-			color: white;
+			color: white; /* comentario CSS */
 			font: normal 20pt Times;
 		}
 		h1 {
@@ -17,11 +17,12 @@
 	</style>
 </head>
 <body>
-	<h1>Olá, mundo!</h1>
+	<h1>Olá, mundo!</h1><!-- comentario HTML-->
 	<script>
-		window.alert("Minha primeira mensagem"); //apenas um alerta
-		window.confirm("Está gostando?"); //confirmação (ok/cancel)
-		window.prompt("Qual é seu nome?"); //janela com input de texto
+		var numero1 = Number(window.prompt("Digite um numero: "));
+		var numero2 = Number(window.prompt("Digite outro numero: "));
+		var soma = numero1 + numero2;
+		window.alert(`A soma entre ${numero1} e ${numero2} é igual a ${soma}.`);
 	</script>
 </body>
 </html>

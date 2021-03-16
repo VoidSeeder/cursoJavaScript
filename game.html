@@ -13,6 +13,41 @@
     <script>
         window.document.addEventListener("keydown", teclaPressionada);
 
+        //juntar na vertical
+        function verticalJoin() {
+            for(gridLine = 0; gridLine < 3; gridLine++) {
+                for(gridColl = 0; gridColl < 4; gridColl++) {
+                    if(grid[gridLine][gridColl].value == 0) {
+                        continue;
+                    }
+
+                    if(grid[gridLine][gridColl].value == grid[gridLine + 1][gridColl].value) {
+                        grid[gridLine][gridColl].value += 1;
+                        grid[gridLine + 1][gridColl].value = 0;
+                        generateNewBlock = true;
+                        console.log("juntou");
+                    }
+                }
+            }
+        }
+
+        function horizontalJoin() {
+            for(gridLine = 0; gridLine < 4; gridLine++) {
+                for(gridColl = 0; gridColl < 3; gridColl++) {
+                    if(grid[gridLine][gridColl].value == 0) {
+                        continue;
+                    }
+
+                    if(grid[gridLine][gridColl].value == grid[gridLine][gridColl + 1].value) {
+                        grid[gridLine][gridColl].value += 1;
+                        grid[gridLine][gridColl + 1].value = 0;
+                        generateNewBlock = true;
+                        console.log("juntou");
+                    }
+                }
+            }
+        }
+
         const move = {
             ArrowUp() {
                 console.log("ArrowUp");
@@ -49,20 +84,7 @@
                 //ir so ate o 3
 
                 //juntar
-                for(gridLine = 0; gridLine < 3; gridLine++) {
-                    for(gridColl = 0; gridColl < 4; gridColl++) {
-                        if(grid[gridLine][gridColl].value == 0) {
-                            continue;
-                        }
-
-                        if(grid[gridLine][gridColl].value == grid[gridLine + 1][gridColl].value) {
-                            grid[gridLine][gridColl].value += 1;
-                            grid[gridLine + 1][gridColl].value = 0;
-                            generateNewBlock = true;
-                            console.log("juntou");
-                        }
-                    }
-                }
+                verticalJoin();
 
                 //aglomerar
                 for(gridLine = 1; gridLine < 4; gridLine++) {
@@ -93,9 +115,131 @@
             },
             ArrowDown() {
                 console.log("ArrowDown");
+
+                generateNewBlock = false;
+
+                //nao preciso analizar a primeira linha => começa com 1
+                //mover o bloco o maximo q eu conseguir para cima
+                //depois de uma junção, ele para de se mover
+                moveCounter = 0;
+                //aglomerar
+                for(gridLine = 3; gridLine >= 0; gridLine--) {
+                    for(gridColl = 0; gridColl < 4; gridColl++) {
+                        if(grid[gridLine][gridColl].value == 0) {
+                            continue;
+                        }
+
+                        for(auxLine = gridLine + 1; auxLine < 4; auxLine++) {
+                            if(grid[auxLine][gridColl].value == 0) {
+                                moveCounter++;
+                            }
+                        }
+
+                        if(moveCounter != 0) {
+                            grid[gridLine + moveCounter][gridColl].value = grid[gridLine][gridColl].value;
+                            grid[gridLine][gridColl].value = 0;
+                            moveCounter = 0;
+                            generateNewBlock = true;
+                            console.log("moveu");
+                        }
+                    }
+                }
+
+                //ir so ate o 3
+
+                //juntar
+                verticalJoin();
+
+                //aglomerar
+                for(gridLine = 3; gridLine >= 0; gridLine--) {
+                    for(gridColl = 0; gridColl < 4; gridColl++) {
+                        if(grid[gridLine][gridColl].value == 0) {
+                            continue;
+                        }
+
+                        for(auxLine = gridLine + 1; auxLine < 4; auxLine++) {
+                            if(grid[auxLine][gridColl].value == 0) {
+                                moveCounter++;
+                            }
+                        }
+
+                        if(moveCounter != 0) {
+                            grid[gridLine + moveCounter][gridColl].value = grid[gridLine][gridColl].value;
+                            grid[gridLine][gridColl].value = 0;
+                            moveCounter = 0;
+                            generateNewBlock = true;
+                            console.log("moveu");
+                        }
+                    }
+                }
+
+                if(generateNewBlock == true) {
+                    newBlock();
+                }
             },
             ArrowRight() {
                 console.log("ArrowRight");
+
+                generateNewBlock = false;
+
+                //nao preciso analizar a primeira linha => começa com 1
+                //mover o bloco o maximo q eu conseguir para cima
+                //depois de uma junção, ele para de se mover
+                moveCounter = 0;
+                //aglomerar
+                for(gridLine = 0; gridLine < 4; gridLine++) {
+                    for(gridColl = 3; gridColl >= 0; gridColl--) {
+                        if(grid[gridLine][gridColl].value == 0) {
+                            continue;
+                        }
+
+                        for(auxColl = gridColl + 1; auxColl < 4; auxColl++) {
+                            if(grid[gridLine][auxColl].value == 0) {
+                                moveCounter++;
+                            }
+                        }
+
+                        if(moveCounter != 0) {
+                            grid[gridLine][gridColl + moveCounter].value = grid[gridLine][gridColl].value;
+                            grid[gridLine][gridColl].value = 0;
+                            moveCounter = 0;
+                            generateNewBlock = true;
+                            console.log("moveu");
+                        }
+                    }
+                }
+
+                //ir so ate o 3
+
+                //juntar
+                horizontalJoin();
+
+                //aglomerar
+                for(gridLine = 0; gridLine < 4; gridLine++) {
+                    for(gridColl = 3; gridColl >= 0; gridColl--) {
+                        if(grid[gridLine][gridColl].value == 0) {
+                            continue;
+                        }
+
+                        for(auxColl = gridColl + 1; auxColl < 4; auxColl++) {
+                            if(grid[gridLine][auxColl].value == 0) {
+                                moveCounter++;
+                            }
+                        }
+
+                        if(moveCounter != 0) {
+                            grid[gridLine][gridColl + moveCounter].value = grid[gridLine][gridColl].value;
+                            grid[gridLine][gridColl].value = 0;
+                            moveCounter = 0;
+                            generateNewBlock = true;
+                            console.log("moveu");
+                        }
+                    }
+                }
+
+                if(generateNewBlock == true) {
+                    newBlock();
+                }
             },
             ArrowLeft() {
                 console.log("ArrowLeft");
@@ -132,20 +276,7 @@
                 //ir so ate o 3
 
                 //juntar
-                for(gridLine = 0; gridLine < 4; gridLine++) {
-                    for(gridColl = 0; gridColl < 3; gridColl++) {
-                        if(grid[gridLine][gridColl].value == 0) {
-                            continue;
-                        }
-
-                        if(grid[gridLine][gridColl].value == grid[gridLine][gridColl + 1].value) {
-                            grid[gridLine][gridColl].value += 1;
-                            grid[gridLine][gridColl + 1].value = 0;
-                            generateNewBlock = true;
-                            console.log("juntou");
-                        }
-                    }
-                }
+                horizontalJoin();
 
                 //aglomerar
                 for(gridLine = 0; gridLine < 4; gridLine++) {
@@ -275,8 +406,12 @@
 
             for(gridLine = 0; gridLine < 4; gridLine++) {
                 for(gridColl = 0; gridColl < 4; gridColl++) {
-                    canvasContext.fillStyle = 'darkblue';
                     block = grid[gridLine][gridColl];
+                    canvasContext.fillStyle = `rgb(
+                        ${(2**block.value <= 2048) ? (255) : (0)},
+                        ${(2**block.value <= 2048) ? (200 - Math.floor(mapping(block.value, 0, Math.log2(2048), 0, 200))) : (0)},
+                        ${(2**block.value <= 2048) ? (200 - Math.floor(mapping(block.value, 0, Math.log2(2048), 0, 200))) : (0)}
+                    )`
                     canvasContext.fillRect(block.x, block.y, blockSize, blockSize);
 
                     if(block.value != 0) {

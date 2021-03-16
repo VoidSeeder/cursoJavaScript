@@ -25,3 +25,16 @@ Number:
     - Number.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
         - pt-BR substitui ponto por virgula (vise-versa)
         - BRL é a moeda (USD, EUR, ...)
+
+Potencia é com o operador **
+
+Operadores de identidade:
+    - 5 == '5' retorna true (igual, significa apenas o valor)
+    - 5 === '5' retorna false (identico, significa tipo e valor igual)
+    - 5 != '5' retorna false
+    - 5 !== '5' retorna true (tipos diferentes)
+
+Operadores lógicos são iguais em C (&& || !)
+
+Operador ternário é igual em C:
+    - (condição) ? (se verdadeiro) : (se falso)

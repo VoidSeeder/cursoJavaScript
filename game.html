@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <canvas id="gameCanvas" width="640" height="480"></canvas>
+    <script>
+        window.document.addEventListener("keydown", teclaPressionada);
+
+        const move = {
+            ArrowUp() {
+                console.log("ArrowUp");
+
+                generateNewBlock = false;
+
+                //nao preciso analizar a primeira linha => começa com 1
+                //mover o bloco o maximo q eu conseguir para cima
+                //depois de uma junção, ele para de se mover
+                moveCounter = 0;
+                //aglomerar
+                for(gridLine = 1; gridLine < 4; gridLine++) {
+                    for(gridColl = 0; gridColl < 4; gridColl++) {
+                        if(grid[gridLine][gridColl].value == 0) {
+                            continue;
+                        }
+
+                        for(auxLine = gridLine - 1; auxLine >= 0; auxLine--) {
+                            if(grid[auxLine][gridColl].value == 0) {
+                                moveCounter++;
+                            }
+                        }
+
+                        if(moveCounter != 0) {
+                            grid[gridLine - moveCounter][gridColl].value = grid[gridLine][gridColl].value;
+                            grid[gridLine][gridColl].value = 0;
+                            moveCounter = 0;
+                            generateNewBlock = true;
+                            console.log("moveu");
+                        }
+                    }
+                }
+
+                //ir so ate o 3
+
+                //juntar
+                for(gridLine = 0; gridLine < 3; gridLine++) {
+                    for(gridColl = 0; gridColl < 4; gridColl++) {
+                        if(grid[gridLine][gridColl].value == 0) {
+                            continue;
+                        }
+
+                        if(grid[gridLine][gridColl].value == grid[gridLine + 1][gridColl].value) {
+                            grid[gridLine][gridColl].value += 1;
+                            grid[gridLine + 1][gridColl].value = 0;
+                            generateNewBlock = true;
+                            console.log("juntou");
+                        }
+                    }
+                }
+
+                //aglomerar
+                for(gridLine = 1; gridLine < 4; gridLine++) {
+                    for(gridColl = 0; gridColl < 4; gridColl++) {
+                        if(grid[gridLine][gridColl].value == 0) {
+                            continue;
+                        }
+                        
+                        for(auxLine = gridLine - 1; auxLine >= 0; auxLine--) {
+                            if(grid[auxLine][gridColl].value == 0) {
+                                moveCounter++;
+                            }
+                        }
+
+                        if(moveCounter != 0) {
+                            grid[gridLine - moveCounter][gridColl].value = grid[gridLine][gridColl].value;
+                            grid[gridLine][gridColl].value = 0;
+                            moveCounter = 0;
+                            generateNewBlock = true;
+                            console.log("moveu");
+                        }
+                    }
+                }
+
+                if(generateNewBlock == true) {
+                    newBlock();
+                }
+            },
+            ArrowDown() {
+                console.log("ArrowDown");
+            },
+            ArrowRight() {
+                console.log("ArrowRight");
+            },
+            ArrowLeft() {
+                console.log("ArrowLeft");
+
+                generateNewBlock = false;
+
+                //nao preciso analizar a primeira linha => começa com 1
+                //mover o bloco o maximo q eu conseguir para cima
+                //depois de uma junção, ele para de se mover
+                moveCounter = 0;
+                //aglomerar
+                for(gridLine = 0; gridLine < 4; gridLine++) {
+                    for(gridColl = 1; gridColl < 4; gridColl++) {
+                        if(grid[gridLine][gridColl].value == 0) {
+                            continue;
+                        }
+
+                        for(auxColl = gridColl - 1; auxColl >= 0; auxColl--) {
+                            if(grid[gridLine][auxColl].value == 0) {
+                                moveCounter++;
+                            }
+                        }
+
+                        if(moveCounter != 0) {
+                            grid[gridLine][gridColl - moveCounter].value = grid[gridLine][gridColl].value;
+                            grid[gridLine][gridColl].value = 0;
+                            moveCounter = 0;
+                            generateNewBlock = true;
+                            console.log("moveu");
+                        }
+                    }
+                }
+
+                //ir so ate o 3
+
+                //juntar
+                for(gridLine = 0; gridLine < 4; gridLine++) {
+                    for(gridColl = 0; gridColl < 3; gridColl++) {
+                        if(grid[gridLine][gridColl].value == 0) {
+                            continue;
+                        }
+
+                        if(grid[gridLine][gridColl].value == grid[gridLine][gridColl + 1].value) {
+                            grid[gridLine][gridColl].value += 1;
+                            grid[gridLine][gridColl + 1].value = 0;
+                            generateNewBlock = true;
+                            console.log("juntou");
+                        }
+                    }
+                }
+
+                //aglomerar
+                for(gridLine = 0; gridLine < 4; gridLine++) {
+                    for(gridColl = 1; gridColl < 4; gridColl++) {
+                        if(grid[gridLine][gridColl].value == 0) {
+                            continue;
+                        }
+
+                        for(auxColl = gridColl - 1; auxColl >= 0; auxColl--) {
+                            if(grid[gridLine][auxColl].value == 0) {
+                                moveCounter++;
+                            }
+                        }
+
+                        if(moveCounter != 0) {
+                            grid[gridLine][gridColl - moveCounter].value = grid[gridLine][gridColl].value;
+                            grid[gridLine][gridColl].value = 0;
+                            moveCounter = 0;
+                            generateNewBlock = true;
+                            console.log("moveu");
+                        }
+                    }
+                }
+
+                if(generateNewBlock == true) {
+                    newBlock();
+                }
+            }
+        }
+
+        function teclaPressionada(event) {
+            const tecla = event.key;
+
+            console.log(`Tecla pressionada: ${tecla}`);
+
+            if(move[tecla]) {
+                move[tecla]();
+            }
+        }
+
+        window.onload = function () {
+            canvas = document.getElementById("gameCanvas");
+            canvasContext = canvas.getContext("2d");
+
+            blockSize = 100;
+            blockSpace = 10;
+            gridStart = {
+                x: 50,
+                y: 30
+            }
+
+            grid = new Array(4);
+
+            for(gridLine = 0; gridLine < 4; gridLine++) {
+                grid[gridLine] = new Array(4);
+                for(gridColl = 0; gridColl < 4; gridColl++) {
+                    grid[gridLine][gridColl] = {
+                        x: gridStart.x + gridColl*(blockSize + blockSpace),
+                        y: gridStart.y + gridLine*(blockSize + blockSpace),
+                        value: 0
+                    };
+                }
+            }
+
+            newBlock();
+            newBlock();
+
+            setInterval(update, 1000 / 30); //30fps
+        }
+
+        function newBlock() {
+            emptyBlock = sortEmptyBlock();
+
+            if(emptyBlock != null) {
+                sortNewBlockValue(emptyBlock);
+            }
+        }
+
+        function hasEmptyBlocks() {
+            for(gridLine = 0; gridLine < 4; gridLine++) {
+                for(gridColl = 0; gridColl < 4; gridColl++) {
+                    if(grid[gridLine][gridColl].value == 0) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        function mapping(value, minIn, maxIn, minOut, maxOut) {
+            return (((value - minIn)/(maxIn - minIn))*(maxOut - minOut)) + minOut;
+        }
+
+        function sortEmptyBlock() {
+            var x = 0, y = 0;
+
+            if(hasEmptyBlocks == false) {
+                return null;
+            }
+
+            do {
+                x = Math.floor(mapping(Math.random(), 0, 1, 0, 4));
+                y = Math.floor(mapping(Math.random(), 0, 1, 0, 4));
+            } while(grid[x][y].value != 0);
+
+            return {x, y};
+        }
+
+        function sortNewBlockValue(block = {x, y}) {
+            grid[block.x][block.y].value = (
+                mapping(Math.random(), 0, 1, 0, 10) < 9
+            ) ? (1) : (2);
+        }
+
+        function update() {
+            draw();
+        }
+
+        function draw() {
+            canvasContext.fillStyle = 'grey';
+            canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+
+            canvasContext.textBaseline = 'middle';
+            canvasContext.textAlign = 'center';
+            canvasContext.font = 'bold 48px Arial';
+
+            for(gridLine = 0; gridLine < 4; gridLine++) {
+                for(gridColl = 0; gridColl < 4; gridColl++) {
+                    canvasContext.fillStyle = 'darkblue';
+                    block = grid[gridLine][gridColl];
+                    canvasContext.fillRect(block.x, block.y, blockSize, blockSize);
+
+                    if(block.value != 0) {
+                        canvasContext.fillStyle = 'white';
+                        canvasContext.fillText(
+                                String(2**block.value),
+                                block.x + (blockSize/2),
+                                block.y + (blockSize/2)
+                            );
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

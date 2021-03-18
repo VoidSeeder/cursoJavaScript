@@ -284,8 +284,7 @@
 
         function sortNewBlockValue(block = {x, y}) {
             grid[block.x][block.y].value = (
-                mapping(Math.random(), 0, 1, 0, 10) < 9
-            ) ? (1) : (2);
+                mapping(Math.random(), 0, 1, 0, 10) < 9) ? (1) : (2);
         }
 
         function update() {
@@ -303,11 +302,17 @@
             for(gridLine = 0; gridLine < 4; gridLine++) {
                 for(gridColl = 0; gridColl < 4; gridColl++) {
                     block = grid[gridLine][gridColl];
-                    canvasContext.fillStyle = `rgb(
-                        ${(2**block.value <= 2048) ? (255) : (0)},
-                        ${(2**block.value <= 2048) ? (200 - Math.floor(mapping(block.value, 0, Math.log2(2048), 0, 200))) : (0)},
-                        ${(2**block.value <= 2048) ? (200 - Math.floor(mapping(block.value, 0, Math.log2(2048), 0, 200))) : (0)}
-                    )`
+
+                    if(block.value != 0) {
+                        canvasContext.fillStyle = `rgb(
+                            ${(2**block.value <= 2048) ? (255) : (0)},
+                            ${(2**block.value <= 2048) ? (200 - Math.floor(mapping(block.value, 0, Math.log2(2048), 0, 200))) : (0)},
+                            ${(2**block.value <= 2048) ? (200 - Math.floor(mapping(block.value, 0, Math.log2(2048), 0, 200))) : (0)}
+                        )`
+                    } else {
+                        canvasContext.fillStyle = 'white';
+                    }
+
                     canvasContext.fillRect(block.x, block.y, blockSize, blockSize);
 
                     if(block.value != 0) {

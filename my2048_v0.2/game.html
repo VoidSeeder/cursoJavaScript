@@ -7,14 +7,50 @@
 	<title>Document</title>
 </head>
 <body>
+	<h1>Escolha o tamanho do tabuleiro:</h1>
+	<button onclick="tableSize.increase()">Maior</button>
+	<button onclick="tableSize.decrease()">Menor</button>
+	<p id="tableSize">Tamanho atual: 4x4</p>
 	<canvas id="gameScreen" width="400" height="400"></canvas>
 
 	<script>
+		const tableSize = {
+			value: 4,
+			max: 40,
+			min: 2,
+			increase() {
+				if(this.value < this.max) {
+					this.value += 1;
+
+					newTableSize(this.value);
+				}
+			},
+			decrease() {
+				if(this.value > this.min) {
+					this.value -= 1;
+
+					newTableSize(this.value);
+				}
+			}
+		};
+
 		window.onload = () => {
-			const state = startGame();
+			newTableSize(tableSize.value);
+		}
+
+		//mudar tam do tabuleiro
+		function newTableSize(value) {
+			const printSize = window.document.getElementById("tableSize");
+			printSize.innerText = `Tamanho atual: ${value}x${value}.`
+
+			newGame(value);
+		}
+
+		function newGame(tableSize) {
+			let state = startGame(tableSize);
 			state.subscribe(stateUpdate);
 
-			const keyboardListner = newKeyboardListner();
+			let keyboardListner = newKeyboardListner();
 			keyboardListner.subscribe(state.move);
 
 			window.requestAnimationFrame(newFrame);
@@ -104,10 +140,10 @@
 		}
 
 		//Game (regras de negócio)
-		function startGame() {
+		function startGame(tableSize) {
 			//cria a matriz
 			const game = {
-				size: 4,
+				size: tableSize,
 				grid: new Array(this.size),
 				observers: []
 			}

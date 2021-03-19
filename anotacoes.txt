@@ -38,3 +38,22 @@ Operadores lógicos são iguais em C (&& || !)
 
 Operador ternário é igual em C:
     - (condição) ? (se verdadeiro) : (se falso)
+
+Tipos de variáveis:
+    - var possui escopo global
+    - let possui escopo local (só vale no bloco)
+    - const possui escopo local e não pode ser reatribuida mas pode ser modificada
+        Exemplo:
+            const a = {nome: "João"}
+            a = {nome: "Pedro"} //isso da erro
+            a.nome = "Pedro" //isso funciona
+
+for in:
+    Sintaxe: for(position in array)
+    Explicação: position é um valor numérico de cada posição de array
+    Uso: array[position]
+
+for of:
+    Sintaxe: for(position in array)
+    Explicação: position assume o valor de array em cada posição
+    Uso: position

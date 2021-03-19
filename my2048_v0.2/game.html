@@ -14,6 +14,9 @@
 	<canvas id="gameScreen" width="400" height="400"></canvas>
 
 	<script>
+		var newGameState;
+		var keyboardListner;
+
 		const tableSize = {
 			value: 4,
 			max: 40,
@@ -35,25 +38,25 @@
 		};
 
 		window.onload = () => {
-			newTableSize(tableSize.value);
+			newGame(tableSize.value);
+
+			window.requestAnimationFrame(newFrame);
 		}
 
 		//mudar tam do tabuleiro
-		function newTableSize(value) {
+		function newTableSize(newSize) {
 			const printSize = window.document.getElementById("tableSize");
-			printSize.innerText = `Tamanho atual: ${value}x${value}.`
+			printSize.innerText = `Tamanho atual: ${newSize}x${newSize}.`;
 
-			newGame(value);
+			newGameState.resize(newSize);
 		}
 
-		function newGame(tableSize) {
-			let state = startGame(tableSize);
-			state.subscribe(stateUpdate);
+		function newGame(initialSize) {
+			newGameState = startGame(initialSize);
+			newGameState.subscribe(stateUpdate);
 
-			let keyboardListner = newKeyboardListner();
-			keyboardListner.subscribe(state.move);
-
-			window.requestAnimationFrame(newFrame);
+			keyboardListner = newKeyboardListner();
+			keyboardListner.subscribe(newGameState.move);
 		}
 
 		//Exibição
@@ -140,16 +143,16 @@
 		}
 
 		//Game (regras de negócio)
-		function startGame(tableSize) {
+		function startGame(initialSize) {
 			//cria a matriz
 			const game = {
-				size: tableSize,
+				size: initialSize,
 				grid: new Array(this.size),
 				observers: []
 			}
 
 			function subscribe(observerFunction) {
-				game.observers.push(observerFunction);
+				game.observers[0] = observerFunction;
 				observerFunction({size: game.size, grid: game.grid});
 			}
 
@@ -159,17 +162,26 @@
 				}
 			}
 
-			for(let position = 0; position < game.size; position++) {
-				game.grid[position] = new Array(game.size);
-				game.grid[position].fill(0);
+			function resize(newSize) {
+				game.size = newSize;
+				game.grid = new Array(game.size);
+				
+				for(let position = 0; position < game.size; position++) {
+					game.grid[position] = new Array(game.size);
+					game.grid[position].fill(0);
+				}
+
+				newBlock(game);
+				newBlock(game);
+
+				notifyAll({size: game.size, grid: game.grid});
 			}
 
-			newBlock(game);
-			newBlock(game);
-
-			notifyAll({size: game.size, grid: game.grid});
+			resize(initialSize);
 
 			function move(direction) {
+				console.log("começo do move " + game.size);
+
 				let hasUpdated = false;
 
 				hasUpdated |= stackUp(direction);
@@ -219,12 +231,12 @@
 							let changed = false;
 
 							for(let line in game.grid) {
-								if(Number(line) + 1 == game.size) {
-									continue;
+								if(Number(line) == 0) {
+									continue
 								}
 
 								for(let column in game.grid[line]) {
-									position = Number(line);
+									position = game.size - 1 - Number(line);
 
 									if(game.grid[position][column] == 0) {
 										continue;
@@ -251,12 +263,12 @@
 
 							for(let line in game.grid) {
 								for(let column in game.grid[line]) {
-									if(Number(column) + 1 == game.size) {
+									if(Number(column) == 0) {
 										continue;
 									}
 
-									position = Number(column);
-
+									position = game.size - 1 - Number(column);
+									
 									if(game.grid[line][position] == 0) {
 										continue;
 									}
@@ -336,7 +348,6 @@
 										game.grid[line][column] += 1;
 										game.grid[next][column] = 0;
 										changed = true;
-										console.log("juntou");
 									}
 								}
 							}
@@ -365,7 +376,6 @@
 										game.grid[position][column] += 1;
 										game.grid[next][column] = 0;
 										changed = true;
-										console.log("juntou");
 									}
 								}
 							}
@@ -394,7 +404,6 @@
 										game.grid[line][position] += 1;
 										game.grid[line][next] = 0;
 										changed = true;
-										console.log("juntou");
 									}
 								}
 							}
@@ -421,7 +430,6 @@
 										game.grid[line][column] += 1;
 										game.grid[line][next] = 0;
 										changed = true;
-										console.log("juntou");
 									}
 								}
 							}
@@ -438,6 +446,7 @@
 
 			return {
 				subscribe,
+				resize,
 				move
 			};
 		}
@@ -500,7 +509,7 @@
 			}
 
 			function subscribe(observerFunction) {
-				keyboard.observers.push(observerFunction);
+				keyboard.observers[0] = observerFunction;
 			}
 
 			function notifyAll(command) {
@@ -512,6 +521,8 @@
 			window.document.addEventListener("keydown", keyPressed);
 
 			function keyPressed(event) {
+				console.log(keyboard.observers);
+
 				const key = event.key;
 
 				const acceptedKeys = {

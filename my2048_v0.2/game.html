@@ -126,7 +126,13 @@
 						screen.fillRect(printParam.init.x, printParam.init.y, printParam.size.width, printParam.size.height);
 					
 						screen.fillStyle = color.text;
-						screen.fillText(String(2**element), printParam.textPosition.x, printParam.textPosition.y);
+						if(String(2**element).length < 3) {
+							screen.font = `bold ${(2/3)*block.size.height}px Arial`;
+							screen.fillText(String(2**element), printParam.textPosition.x, printParam.textPosition.y);
+						} else {
+							screen.font = `bold ${(2/String(2**element).length)*(2/3)*block.size.height}px Arial`;
+							screen.fillText(String(2**element), printParam.textPosition.x, printParam.textPosition.y);
+						}
 					} else {
 						screen.fillStyle = color.emptyBlock;
 						screen.fillRect(printParam.init.x, printParam.init.y, printParam.size.width, printParam.size.height);
@@ -145,11 +151,15 @@
 		//Game (regras de negócio)
 		function startGame(initialSize) {
 			//cria a matriz
-			const game = {
+			let game = {
 				size: initialSize,
 				grid: new Array(this.size),
 				observers: []
 			}
+
+			let previousState ={
+				grid: new Array(initialSize.size)
+			};
 
 			function subscribe(observerFunction) {
 				game.observers[0] = observerFunction;
@@ -165,10 +175,14 @@
 			function resize(newSize) {
 				game.size = newSize;
 				game.grid = new Array(game.size);
-				
+				previousState.grid = new Array(game.size);
+
 				for(let position = 0; position < game.size; position++) {
 					game.grid[position] = new Array(game.size);
 					game.grid[position].fill(0);
+
+					previousState.grid[position] = new Array(game.size);
+					previousState.grid[position].fill(0);
 				}
 
 				newBlock(game);
@@ -180,9 +194,23 @@
 			resize(initialSize);
 
 			function move(direction) {
-				console.log("começo do move " + game.size);
-
 				let hasUpdated = false;
+
+				if(direction == 'backspace') {
+					for(let line in game.grid) {
+						for(let column in game.grid[line]) {
+							game.grid[line][column] = previousState.grid[line][column];
+						}
+					}
+
+					notifyAll({size: game.size, grid: game.grid});
+				}
+
+				for(let line in game.grid) {
+					for(let column in game.grid[line]) {
+						previousState.grid[line][column] = game.grid[line][column];
+					}
+				}
 
 				hasUpdated |= stackUp(direction);
 				hasUpdated |= join(direction);
@@ -521,8 +549,6 @@
 			window.document.addEventListener("keydown", keyPressed);
 
 			function keyPressed(event) {
-				console.log(keyboard.observers);
-
 				const key = event.key;
 
 				const acceptedKeys = {
@@ -537,6 +563,9 @@
 					},
 					ArrowLeft() {
 						notifyAll('left');
+					},
+					Backspace() {
+						notifyAll('backspace');
 					}
 				}
 

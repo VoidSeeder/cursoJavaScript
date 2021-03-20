@@ -1,583 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Document</title>
 </head>
+
 <body>
 	<h1>Escolha o tamanho do tabuleiro:</h1>
-	<button onclick="tableSize.increase()">Maior</button>
-	<button onclick="tableSize.decrease()">Menor</button>
-	<p id="tableSize">Tamanho atual: 4x4</p>
-	<canvas id="gameScreen" width="400" height="400"></canvas>
+	<button id="increase">Maior</button>
+	<button id="decrease">Menor</button>
+	<p id="tableSizeOutput"></p>
+	<canvas id="gameScreen" width="600" height="600"></canvas>
 
-	<script>
-		var newGameState;
-		var keyboardListner;
-
-		const tableSize = {
-			value: 4,
-			max: 40,
-			min: 2,
-			increase() {
-				if(this.value < this.max) {
-					this.value += 1;
-
-					newTableSize(this.value);
-				}
-			},
-			decrease() {
-				if(this.value > this.min) {
-					this.value -= 1;
-
-					newTableSize(this.value);
-				}
-			}
-		};
+	<script type="module">
+		import startGame from './game.js';
+		import newKeyboardListner from './keyboard.js';
+		import newGraphicCanvas from './graphic.js';
 
 		window.onload = () => {
-			newGame(tableSize.value);
+			const initialTableSize = 4;
 
-			window.requestAnimationFrame(newFrame);
-		}
+			var runningGame = gameInstance(window, initialTableSize);
 
-		//mudar tam do tabuleiro
-		function newTableSize(newSize) {
-			const printSize = window.document.getElementById("tableSize");
-			printSize.innerText = `Tamanho atual: ${newSize}x${newSize}.`;
+			var tableSize = {
+				value: initialTableSize,
+				max: 40,
+				min: 2,
+				increase() {
+					if (this.value < this.max) {
+						this.value += 1;
 
-			newGameState.resize(newSize);
-		}
-
-		function newGame(initialSize) {
-			newGameState = startGame(initialSize);
-			newGameState.subscribe(stateUpdate);
-
-			keyboardListner = newKeyboardListner();
-			keyboardListner.subscribe(newGameState.move);
-		}
-
-		//Exibição
-		const state = {
-			size: 0,
-			grid: []
-		}
-
-		function newFrame() {
-			//desenhar um novo frame na tela
-			const canvas = window.document.getElementById("gameScreen");
-			const screen = canvas.getContext("2d");
-
-			//limpa a tela
-			screen.clearRect(0, 0, canvas.width, canvas.height);
-
-			//desenha o novo frame
-			const block = {
-				size: {
-					width: (canvas.width - (state.size*5) - 5)/state.size,
-					height: (canvas.height - (state.size*5) - 5)/state.size
-				},
-				space: 5
-			}
-
-			screen.textBaseline = 'middle';
-            screen.textAlign = 'center';
-            screen.font = `bold ${(2/3)*block.size.height}px Arial`;
-
-			const color = {
-				background: 'darkgray',
-				emptyBlock: 'white',
-				notEmptyBlock(value) {
-					return	`rgb(
-                        	${(2**value <= 2048) ? (255) : (0)},
-                           	${(2**value <= 2048) ? (200 - Math.floor(mapping(value, 0, Math.log2(2048), 0, 200))) : (0)},
-                           	${(2**value <= 2048) ? (200 - Math.floor(mapping(value, 0, Math.log2(2048), 0, 200))) : (0)}
-                    	)`;
-				},
-				text: 'white'
-			}
-
-			screen.fillStyle = "darkgray";
-			screen.fillRect(0, 0, canvas.width, canvas.height);
-
-			for(line in state.grid) {
-				for(column in state.grid[line]) {
-					let element = state.grid[line][column];
-
-					let printParam = {
-						init: {
-							x: block.space + column*(block.size.width + block.space),
-							y: block.space + line*(block.size.height + block.space)
-						},
-						size: block.size,
-						textPosition: null
+						runningGame.newTableSize(this.value);
 					}
+				},
+				decrease() {
+					if (this.value > this.min) {
+						this.value -= 1;
 
-					printParam.textPosition = {
-						x: printParam.init.x + (printParam.size.width/2),
-						y: printParam.init.y + (printParam.size.height/2)
-					}
-			
-
-					if(element != 0) {
-						screen.fillStyle = color.notEmptyBlock(element);
-						screen.fillRect(printParam.init.x, printParam.init.y, printParam.size.width, printParam.size.height);
-					
-						screen.fillStyle = color.text;
-						if(String(2**element).length < 3) {
-							screen.font = `bold ${(2/3)*block.size.height}px Arial`;
-							screen.fillText(String(2**element), printParam.textPosition.x, printParam.textPosition.y);
-						} else {
-							screen.font = `bold ${(2/String(2**element).length)*(2/3)*block.size.height}px Arial`;
-							screen.fillText(String(2**element), printParam.textPosition.x, printParam.textPosition.y);
-						}
-					} else {
-						screen.fillStyle = color.emptyBlock;
-						screen.fillRect(printParam.init.x, printParam.init.y, printParam.size.width, printParam.size.height);
+						runningGame.newTableSize(this.value);
 					}
 				}
-			}
-
-			window.requestAnimationFrame(newFrame);
-		}
-
-		function stateUpdate(gameStateObj) {
-			state.size = gameStateObj.size;
-			state.grid = gameStateObj.grid;
-		}
-
-		//Game (regras de negócio)
-		function startGame(initialSize) {
-			//cria a matriz
-			let game = {
-				size: initialSize,
-				grid: new Array(this.size),
-				observers: []
-			}
-
-			let previousState ={
-				grid: new Array(initialSize.size)
 			};
 
-			function subscribe(observerFunction) {
-				game.observers[0] = observerFunction;
-				observerFunction({size: game.size, grid: game.grid});
+			const increaseButton = window.document.getElementById("increase");
+			const decreaseButton = window.document.getElementById("decrease");
+
+			increaseButton.onclick = () => { tableSize.increase() };
+			decreaseButton.onclick = () => { tableSize.decrease() };
+		}
+
+		//subject game
+		function gameInstance(windowInput, initialSize) {
+			const gameGraphic = newGraphicCanvas(windowInput, "gameScreen");
+			const gameState = startGame(initialSize);
+			const keyboardListner = newKeyboardListner();
+
+			function newTableSize(newSize) {
+				const printSize = windowInput.document.getElementById("tableSizeOutput");
+				printSize.innerText = `Tamanho atual: ${newSize}x${newSize}.`;
+
+				gameState.resize(newSize);
 			}
 
-			function notifyAll(command) {
-				for(const observerFunction of game.observers) {
-					observerFunction(command);
-				}
+			function newGame(initialSize) {
+				gameState.subscribe(gameGraphic.stateUpdate);
+				keyboardListner.subscribe(gameState.move);
+				window.requestAnimationFrame(gameGraphic.newFrame);
 			}
 
-			function resize(newSize) {
-				game.size = newSize;
-				game.grid = new Array(game.size);
-				previousState.grid = new Array(game.size);
-
-				for(let position = 0; position < game.size; position++) {
-					game.grid[position] = new Array(game.size);
-					game.grid[position].fill(0);
-
-					previousState.grid[position] = new Array(game.size);
-					previousState.grid[position].fill(0);
-				}
-
-				newBlock(game);
-				newBlock(game);
-
-				notifyAll({size: game.size, grid: game.grid});
-			}
-
-			resize(initialSize);
-
-			function move(direction) {
-				let hasUpdated = false;
-
-				if(direction == 'backspace') {
-					for(let line in game.grid) {
-						for(let column in game.grid[line]) {
-							game.grid[line][column] = previousState.grid[line][column];
-						}
-					}
-
-					notifyAll({size: game.size, grid: game.grid});
-				}
-
-				for(let line in game.grid) {
-					for(let column in game.grid[line]) {
-						previousState.grid[line][column] = game.grid[line][column];
-					}
-				}
-
-				hasUpdated |= stackUp(direction);
-				hasUpdated |= join(direction);
-				hasUpdated |= stackUp(direction);
-
-				if(hasUpdated) {
-					newBlock(game);
-					notifyAll({size: game.size, grid: game.grid});
-				}
-
-				function stackUp(direction) {
-					const stackFunctions = {
-						up() {
-							let position = 0;
-							let changed = false;
-
-							for(let line in game.grid) {
-								if(Number(line) - 1 < 0) {
-									continue;
-								}
-
-								for(let column in game.grid[line]) {
-									position = Number(line);
-
-									if(game.grid[position][column] == 0) {
-										continue;
-									}
-
-									while(position > 0) {
-										if(game.grid[position - 1][column] == 0) {
-											game.grid[position - 1][column] = game.grid[position][column];
-											game.grid[position][column] = 0;
-											changed = true;
-											position -= 1;
-										} else {
-											break;
-										}
-									}
-								}
-							}
-
-							return changed;
-						},
-						down() {
-							let position = 0;
-							let changed = false;
-
-							for(let line in game.grid) {
-								if(Number(line) == 0) {
-									continue
-								}
-
-								for(let column in game.grid[line]) {
-									position = game.size - 1 - Number(line);
-
-									if(game.grid[position][column] == 0) {
-										continue;
-									}
-
-									while(position < game.size - 1) {
-										if(game.grid[position + 1][column] == 0) {
-											game.grid[position + 1][column] = game.grid[position][column];
-											game.grid[position][column] = 0;
-											changed = true;
-											position += 1;
-										} else {
-											break;
-										}
-									}
-								}
-							}
-
-							return changed;
-						},
-						right() {
-							let position = 0;
-							let changed = false;
-
-							for(let line in game.grid) {
-								for(let column in game.grid[line]) {
-									if(Number(column) == 0) {
-										continue;
-									}
-
-									position = game.size - 1 - Number(column);
-									
-									if(game.grid[line][position] == 0) {
-										continue;
-									}
-
-									while(position < game.size - 1) {
-										if(game.grid[line][position + 1] == 0) {
-											game.grid[line][position + 1] = game.grid[line][position];
-											game.grid[line][position] = 0;
-											changed = true;
-											position += 1;
-										} else {
-											break;
-										}
-									}
-								}
-							}
-
-							return changed;
-						},
-						left() {
-							let position = 0;
-							let changed = false;
-
-							for(let line in game.grid) {
-								for(let column in game.grid[line]) {
-									if(Number(column) - 1 < 0) {
-										continue;
-									}
-
-									position = Number(column);
-
-									if(game.grid[line][position] == 0) {
-										continue;
-									}
-
-									while(position > 0) {
-										if(game.grid[line][position - 1] == 0) {
-											game.grid[line][position - 1] = game.grid[line][position];
-											game.grid[line][position] = 0;
-											changed = true;
-											position -= 1;
-										} else {
-											break;
-										}
-									}
-								}
-							}
-
-							return changed;
-						}
-					}
-
-					if(stackFunctions[direction]) {
-						return stackFunctions[direction]();
-					}
-				}
-
-				function join(direction) {
-					const joinFunctions = {
-						up() {
-							let next = 0;
-							let changed = false;
-
-							for(let line in game.grid) {
-								next = Number(line) + 1;
-
-								if(next == game.size) {
-									break;
-								}
-
-								for(let column in game.grid[line]) {
-									if(game.grid[line][column] == 0) {
-										continue;
-									}
-
-									if(game.grid[line][column] == game.grid[next][column]) {
-										game.grid[line][column] += 1;
-										game.grid[next][column] = 0;
-										changed = true;
-									}
-								}
-							}
-
-							return changed;
-						},
-						down() {
-							let next = 0;
-							let position = 0;
-							let changed = false;
-
-							for(let line in game.grid) {
-								position = game.size - 1 - Number(line);
-								next = position - 1;
-
-								if(next < 0) {
-									break;
-								}
-
-								for(let column in game.grid[line]) {
-									if(game.grid[position][column] == 0) {
-										continue;
-									}
-
-									if(game.grid[position][column] == game.grid[next][column]) {
-										game.grid[position][column] += 1;
-										game.grid[next][column] = 0;
-										changed = true;
-									}
-								}
-							}
-
-							return changed;
-						},
-						right() {
-							let next = 0;
-							let position = 0;
-							let changed = false;
-
-							for(let line in game.grid) {
-								for(let column in game.grid[line]) {
-									position = game.size - 1 - Number(column);
-									next = position - 1;
-
-									if(next < 0) {
-										break;
-									}
-
-									if(game.grid[line][position] == 0) {
-										continue;
-									}
-
-									if(game.grid[line][position] == game.grid[line][next]) {
-										game.grid[line][position] += 1;
-										game.grid[line][next] = 0;
-										changed = true;
-									}
-								}
-							}
-
-							return changed;
-						},
-						left() {
-							let next = 0;
-							let changed = false;
-
-							for(let line in game.grid) {
-								for(let column in game.grid[line]) {
-									next = Number(column) + 1;
-
-									if(next == game.size) {
-										break;
-									}
-
-									if(game.grid[line][column] == 0) {
-										continue;
-									}
-
-									if(game.grid[line][column] == game.grid[line][next]) {
-										game.grid[line][column] += 1;
-										game.grid[line][next] = 0;
-										changed = true;
-									}
-								}
-							}
-
-							return changed;
-						}
-					}
-
-					if(joinFunctions[direction]) {
-						return joinFunctions[direction]();
-					}
-				}
-			}
+			newGame(initialSize);
+			newTableSize(initialSize);
 
 			return {
-				subscribe,
-				resize,
-				move
+				newTableSize
 			};
 		}
 
-		function newBlock(gameObj) {
-			//escolher uma posição vazia (= 0)
-			const position = sortEmptyBlock(gameObj);
-
-			//sortear um numero para a posição (1 ou 2)
-			if(position) {
-				//logica para 10% de chance de surgir um 4
-				if(sortNewValue(0, 10) < 9) {
-					gameObj.grid[position.x][position.y] = 1;
-				} else {
-					gameObj.grid[position.x][position.y] = 2;
-				}
-			}
-		}
-
-		function sortEmptyBlock(gameObj) {
-			const position = {x: 0, y: 0};
-
-			if(hasEmptyBlocks(gameObj.grid)) {
-				do {
-					position.x = sortNewValue(0, gameObj.size);
-					position.y = sortNewValue(0, gameObj.size);
-
-				} while (gameObj.grid[position.x][position.y] != 0);
-
-				return position;
-			} else {
-				return null;
-			}
-		}
-
-		function hasEmptyBlocks(matrice) {
-			for(let line in matrice) {
-				for(let column in matrice) {
-					if(matrice[line][column] == 0) {
-						return true;
-					}
-				}
-			}
-
-			return false;
-		}
-
-		function sortNewValue(min, max) {
-			return Math.floor(mapping(Math.random(), 0, 1, min, max));
-		}
-
-		function mapping(value, minIn, maxIn, minOut, maxOut) {
-            return (((value - minIn)/(maxIn - minIn))*(maxOut - minOut)) + minOut;
-        }
-
-		//Input
-		function newKeyboardListner() {
-			const keyboard = {
-				observers: []
-			}
-
-			function subscribe(observerFunction) {
-				keyboard.observers[0] = observerFunction;
-			}
-
-			function notifyAll(command) {
-				for(let observerFunction of keyboard.observers) {
-					observerFunction(command);
-				}
-			}
-
-			window.document.addEventListener("keydown", keyPressed);
-
-			function keyPressed(event) {
-				const key = event.key;
-
-				const acceptedKeys = {
-					ArrowUp() {
-						notifyAll('up');
-					},
-					ArrowDown() {
-						notifyAll('down');
-					},
-					ArrowRight() {
-						notifyAll('right');
-					},
-					ArrowLeft() {
-						notifyAll('left');
-					},
-					Backspace() {
-						notifyAll('backspace');
-					}
-				}
-
-				if(acceptedKeys[key]) {
-					acceptedKeys[key]();
-				}
-			}
-
-			return {
-				subscribe
-			};
-		}
 	</script>
 </body>
+
 </html>

@@ -6,14 +6,21 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Document</title>
+	<link rel="stylesheet" href="game.css">
 </head>
 
 <body>
-	<h1>Escolha o tamanho do tabuleiro:</h1>
-	<button id="increase">Maior</button>
-	<button id="decrease">Menor</button>
-	<p id="tableSizeOutput"></p>
-	<canvas id="gameScreen" width="600" height="600"></canvas>
+	<div class="configs">
+		<button id="increase">Larger</button>
+		<button id="decrease">Smaller</button>
+		<button id="newGame">New Game</button>
+	</div>
+	<div class="score">
+		<p id="score"></p>
+	</div>
+	<div class="game">
+		<canvas id="gameScreen" width="600" height="600"></canvas>
+	</div>
 
 	<script type="module">
 		import startGame from './game.js';
@@ -47,28 +54,33 @@
 
 			const increaseButton = window.document.getElementById("increase");
 			const decreaseButton = window.document.getElementById("decrease");
+			const newGameButton = window.document.getElementById("newGame");
 
 			increaseButton.onclick = () => { tableSize.increase() };
 			decreaseButton.onclick = () => { tableSize.decrease() };
+			newGameButton.onclick = () => { runningGame.newTableSize(tableSize.value) };
 		}
 
-		//subject game
+		//subject instancia de jogo
 		function gameInstance(windowInput, initialSize) {
 			const gameGraphic = newGraphicCanvas(windowInput, "gameScreen");
 			const gameState = startGame(initialSize);
 			const keyboardListner = newKeyboardListner();
 
 			function newTableSize(newSize) {
-				const printSize = windowInput.document.getElementById("tableSizeOutput");
-				printSize.innerText = `Tamanho atual: ${newSize}x${newSize}.`;
+				//const printSize = windowInput.document.getElementById("tableSizeOutput");
+				//printSize.innerText = `${newSize}x${newSize}`;
 
 				gameState.resize(newSize);
 			}
 
 			function newGame(initialSize) {
 				gameState.subscribe(gameGraphic.stateUpdate);
+				gameState.subscribe((stateObj) => {
+					windowInput.document.getElementById("score").innerText = `${stateObj.score}`;
+				});
 				keyboardListner.subscribe(gameState.move);
-				window.requestAnimationFrame(gameGraphic.newFrame);
+				windowInput.requestAnimationFrame(gameGraphic.newFrame);
 			}
 
 			newGame(initialSize);

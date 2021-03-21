@@ -5,16 +5,18 @@ export default function startGame(initialSize) {
 	let game = {
 		size: initialSize,
 		grid: new Array(initialSize),
+		score: 0,
 		observers: []
 	}
 
 	let previousState = {
-		grid: new Array(initialSize)
+		grid: new Array(initialSize),
+		score: 0
 	};
 
 	function subscribe(observerFunction) {
-		game.observers[0] = observerFunction;
-		observerFunction({ size: game.size, grid: game.grid });
+		game.observers.push(observerFunction);
+		observerFunction({ size: game.size, grid: game.grid, score: game.score });
 	}
 
 	function notifyAll(command) {
@@ -25,8 +27,10 @@ export default function startGame(initialSize) {
 
 	function resize(newSize) {
 		game.size = newSize;
+		game.score = 0;
 		game.grid = new Array(game.size);
 		previousState.grid = new Array(game.size);
+		previousState.score = 0;
 
 		for (let position = 0; position < game.size; position++) {
 			game.grid[position] = new Array(game.size);
@@ -39,13 +43,12 @@ export default function startGame(initialSize) {
 		newBlock(game);
 		newBlock(game);
 
-		notifyAll({ size: game.size, grid: game.grid });
+		notifyAll({ size: game.size, grid: game.grid, score: game.score });
 	}
-
-	resize(initialSize);
 
 	function move(input) {
 		let hasUpdated = false;
+		let firstMove = true;
 
 		if (input == 'backspace') {
 			for (let line in game.grid) {
@@ -54,29 +57,71 @@ export default function startGame(initialSize) {
 				}
 			}
 
-			notifyAll({ size: game.size, grid: game.grid });
+			game.score = previousState.score;
+
+			notifyAll({ size: game.size, grid: game.grid, score: game.score });
 		}
 
-		for (let line in game.grid) {
-			for (let column in game.grid[line]) {
-				previousState.grid[line][column] = game.grid[line][column];
+		function saveState() {
+			for (let line in game.grid) {
+				for (let column in game.grid[line]) {
+					previousState.grid[line][column] = game.grid[line][column];
+				}
 			}
+
+			previousState.score = game.score;
 		}
 
-		hasUpdated |= stackUp(input);
-		hasUpdated |= join(input);
-		hasUpdated |= stackUp(input);
+		stackUp(input);
+		join(input);
+		stackUp(input);
+
+		function swapBlocks(x1, y1, x2, y2) {
+			if (firstMove) {
+				saveState();
+				firstMove = false;
+				hasUpdated = true;
+			}
+
+			const aux = game.grid[x1][y1];
+			game.grid[x1][y1] = game.grid[x2][y2];
+			game.grid[x2][y2] = aux;
+
+			notifyAll({
+				size: game.size, grid: game.grid, score: game.score,
+				type: 'move', from: { x: x2, y: y2 }, to: { x: x1, y: y1 }
+			});
+		}
+
+		function joinBlocks(xIn, yIn, xErase, yErase) {
+			if (firstMove) {
+				saveState();
+				firstMove = false;
+				hasUpdated = true;
+			}
+
+			game.grid[xIn][yIn] += 1;
+			game.grid[xErase][yErase] = 0;
+			game.score += 2 ** game.grid[xIn][yIn];
+
+			notifyAll({
+				size: game.size, grid: game.grid, score: game.score,
+				type: 'join', to: { x: xIn, y: yIn }, from: { x: xErase, y: yErase }
+			});
+		}
 
 		if (hasUpdated) {
-			newBlock(game);
-			notifyAll({ size: game.size, grid: game.grid });
+			const position = newBlock(game);
+			notifyAll({
+				size: game.size, grid: game.grid, score: game.score,
+				type: 'appear', in: { x: position.x, y: position.y }
+			});
 		}
 
 		function stackUp(direction) {
 			const stackFunctions = {
 				up() {
 					let position = 0;
-					let changed = false;
 
 					for (let line in game.grid) {
 						if (Number(line) - 1 < 0) {
@@ -92,9 +137,7 @@ export default function startGame(initialSize) {
 
 							while (position > 0) {
 								if (game.grid[position - 1][column] == 0) {
-									game.grid[position - 1][column] = game.grid[position][column];
-									game.grid[position][column] = 0;
-									changed = true;
+									swapBlocks(position - 1, column, position, column);
 									position -= 1;
 								} else {
 									break;
@@ -102,12 +145,9 @@ export default function startGame(initialSize) {
 							}
 						}
 					}
-
-					return changed;
 				},
 				down() {
 					let position = 0;
-					let changed = false;
 
 					for (let line in game.grid) {
 						if (Number(line) == 0) {
@@ -123,9 +163,7 @@ export default function startGame(initialSize) {
 
 							while (position < game.size - 1) {
 								if (game.grid[position + 1][column] == 0) {
-									game.grid[position + 1][column] = game.grid[position][column];
-									game.grid[position][column] = 0;
-									changed = true;
+									swapBlocks(position + 1, column, position, column);
 									position += 1;
 								} else {
 									break;
@@ -133,12 +171,9 @@ export default function startGame(initialSize) {
 							}
 						}
 					}
-
-					return changed;
 				},
 				right() {
 					let position = 0;
-					let changed = false;
 
 					for (let line in game.grid) {
 						for (let column in game.grid[line]) {
@@ -154,9 +189,7 @@ export default function startGame(initialSize) {
 
 							while (position < game.size - 1) {
 								if (game.grid[line][position + 1] == 0) {
-									game.grid[line][position + 1] = game.grid[line][position];
-									game.grid[line][position] = 0;
-									changed = true;
+									swapBlocks(line, position + 1, line, position);
 									position += 1;
 								} else {
 									break;
@@ -164,12 +197,9 @@ export default function startGame(initialSize) {
 							}
 						}
 					}
-
-					return changed;
 				},
 				left() {
 					let position = 0;
-					let changed = false;
 
 					for (let line in game.grid) {
 						for (let column in game.grid[line]) {
@@ -185,9 +215,7 @@ export default function startGame(initialSize) {
 
 							while (position > 0) {
 								if (game.grid[line][position - 1] == 0) {
-									game.grid[line][position - 1] = game.grid[line][position];
-									game.grid[line][position] = 0;
-									changed = true;
+									swapBlocks(line, position - 1, line, position);
 									position -= 1;
 								} else {
 									break;
@@ -195,8 +223,6 @@ export default function startGame(initialSize) {
 							}
 						}
 					}
-
-					return changed;
 				}
 			}
 
@@ -209,7 +235,6 @@ export default function startGame(initialSize) {
 			const joinFunctions = {
 				up() {
 					let next = 0;
-					let changed = false;
 
 					for (let line in game.grid) {
 						next = Number(line) + 1;
@@ -224,19 +249,14 @@ export default function startGame(initialSize) {
 							}
 
 							if (game.grid[line][column] == game.grid[next][column]) {
-								game.grid[line][column] += 1;
-								game.grid[next][column] = 0;
-								changed = true;
+								joinBlocks(line, column, next, column);
 							}
 						}
 					}
-
-					return changed;
 				},
 				down() {
 					let next = 0;
 					let position = 0;
-					let changed = false;
 
 					for (let line in game.grid) {
 						position = game.size - 1 - Number(line);
@@ -252,19 +272,14 @@ export default function startGame(initialSize) {
 							}
 
 							if (game.grid[position][column] == game.grid[next][column]) {
-								game.grid[position][column] += 1;
-								game.grid[next][column] = 0;
-								changed = true;
+								joinBlocks(position, column, next, column);
 							}
 						}
 					}
-
-					return changed;
 				},
 				right() {
 					let next = 0;
 					let position = 0;
-					let changed = false;
 
 					for (let line in game.grid) {
 						for (let column in game.grid[line]) {
@@ -280,18 +295,13 @@ export default function startGame(initialSize) {
 							}
 
 							if (game.grid[line][position] == game.grid[line][next]) {
-								game.grid[line][position] += 1;
-								game.grid[line][next] = 0;
-								changed = true;
+								joinBlocks(line, position, line, next);
 							}
 						}
 					}
-
-					return changed;
 				},
 				left() {
 					let next = 0;
-					let changed = false;
 
 					for (let line in game.grid) {
 						for (let column in game.grid[line]) {
@@ -306,14 +316,10 @@ export default function startGame(initialSize) {
 							}
 
 							if (game.grid[line][column] == game.grid[line][next]) {
-								game.grid[line][column] += 1;
-								game.grid[line][next] = 0;
-								changed = true;
+								joinBlocks(line, column, line, next);
 							}
 						}
 					}
-
-					return changed;
 				}
 			}
 
@@ -342,6 +348,8 @@ function newBlock(gameObj) {
 		} else {
 			gameObj.grid[position.x][position.y] = 2;
 		}
+
+		return position;
 	}
 }
 

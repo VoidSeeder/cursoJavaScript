@@ -2,8 +2,6 @@ import mapping from './mapping.js'
 
 //Exibição
 export default function newGraphicCanvas(windowInput, canvasId) {
-	//desenhar um novo frame na tela
-	// const canvas = window.document.getElementById("gameScreen");
 	const canvas = windowInput.document.getElementById(canvasId);
 	const screen = canvas.getContext("2d");
 
@@ -12,13 +10,69 @@ export default function newGraphicCanvas(windowInput, canvasId) {
 		grid: []
 	}
 
+	let animationsList = [];
+	let lastAddedAnimation = {
+		from: 0,
+		to: 0
+	};
+
 	function stateUpdate(gameStateObj) {
 		state.size = gameStateObj.size;
 		state.grid = gameStateObj.grid;
-	}
 
-	//chama a newFrame pela primeira vez
-	//newFrame();
+		if (gameStateObj.type) {
+			const moveTypes = {
+				move() {
+					if (lastAddedAnimation.to.x == gameStateObj.from.x && lastAddedAnimation.to.y == gameStateObj.from.y) {
+						animationsList.pop();
+
+						lastAddedAnimation = {
+							type: gameStateObj.type,
+							from: lastAddedAnimation.from,
+							to: gameStateObj.to,
+							value: state.grid[gameStateObj.to.x][gameStateObj.to.y],
+							progress: 0
+						};
+
+						animationsList.push(lastAddedAnimation);
+					} else {
+						lastAddedAnimation = {
+							type: gameStateObj.type,
+							from: gameStateObj.from,
+							to: gameStateObj.to,
+							value: state.grid[gameStateObj.to.x][gameStateObj.to.y],
+							progress: 0
+						};
+
+						animationsList.push(lastAddedAnimation);
+					}
+
+					//console.log(`move animation registred do valor ${2**state.grid[gameStateObj.to.x][gameStateObj.to.y]} de (${gameStateObj.from.x},${gameStateObj.from.y}) para (${gameStateObj.to.x},${gameStateObj.to.y})`);
+				},
+				join() {
+					animationsList.push({
+						type: gameStateObj.type,
+						from: gameStateObj.from,
+						to: gameStateObj.to,
+						value: state.grid[gameStateObj.to.x][gameStateObj.to.y] - 1,
+						progress: 0
+					});
+
+					//console.log(`join animation registred do valor ${2**(state.grid[gameStateObj.to.x][gameStateObj.to.y] - 1)} de (${gameStateObj.from.x},${gameStateObj.from.y}) para (${gameStateObj.to.x},${gameStateObj.to.y})`)
+				},
+				appear() {
+					animationsList.push({
+						type: gameStateObj.type,
+						in: gameStateObj.in,
+						value: state.grid[gameStateObj.in.x][gameStateObj.in.y],
+						progress: 0
+					});
+				}
+			}
+
+			moveTypes[gameStateObj.type]();
+		}
+	}
 
 	//desenha o novo frame
 	function newFrame() {
@@ -90,7 +144,21 @@ export default function newGraphicCanvas(windowInput, canvasId) {
 			}
 		}
 
-		//window.requestAnimationFrame(newFrame);
+		runAnimations();
+
+		function runAnimations() {
+			const animation = animationsList[0];
+
+			if (animation) {
+				animation.progress += 20;
+
+				if (animation.progress == 100) {
+					console.log(`animated ${animationsList[0].type}`);
+					animationsList.shift();
+				}
+			}
+		}
+
 		windowInput.requestAnimationFrame(newFrame);
 	}
 

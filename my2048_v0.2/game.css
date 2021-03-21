@@ -1,0 +1,37 @@
+div {
+	text-align: center;
+}
+
+div.score {
+	color: white;
+	background-color: #4CAF50;
+	margin: 5px auto;
+	min-width: min-content;
+	max-width: max-content;
+	border-radius: 10px;
+}
+
+p#score {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 48px;
+	font-weight: bold;
+	margin: 5px;
+}
+
+button {
+	background-color: #4CAF50;
+	border: none;
+	color: white;
+	padding: 15px 32px;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-size: 16px;
+	margin: 4px 2px;
+	cursor: pointer;
+}
+
+canvas {
+	border-style: solid;
+	border-color: #4CAF50;
+}

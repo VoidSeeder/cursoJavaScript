@@ -107,7 +107,7 @@ export default function newGraphicCanvas(windowInput, canvasId) {
 
 		function runAnimations() {
 			const animation = animationsList[0];
-			const animationStep = 20;
+			const animationStep = 50;
 
 			const moves = {
 				move() {

@@ -40,10 +40,24 @@ export default function startGame(initialSize) {
 			previousState.grid[position].fill(0);
 		}
 
-		newBlock(game);
-		newBlock(game);
+		notifyAll({
+			size: game.size, grid: game.grid, score: game.score,
+			type: 'newGame'
+		});
 
-		notifyAll({ size: game.size, grid: game.grid, score: game.score });
+		let position = newBlock(game);
+		notifyAll({
+			size: game.size, grid: game.grid, score: game.score,
+			type: 'appear', in: { x: position.x, y: position.y}, value: game.grid[position.x][position.y]
+		});
+
+		position = newBlock(game);
+		notifyAll({
+			size: game.size, grid: game.grid, score: game.score,
+			type: 'appear', in: { x: position.x, y: position.y}, value: game.grid[position.x][position.y]
+		});
+
+		//notifyAll({ size: game.size, grid: game.grid, score: game.score });
 	}
 
 	function move(input) {
@@ -51,15 +65,25 @@ export default function startGame(initialSize) {
 		let firstMove = true;
 
 		if (input == 'backspace') {
+			notifyAll({
+				size: game.size, grid: game.grid, score: game.score,
+				type: 'newGame'
+			});
+
 			for (let line in game.grid) {
 				for (let column in game.grid[line]) {
 					game.grid[line][column] = previousState.grid[line][column];
+					
+					notifyAll({
+						size: game.size, grid: game.grid, score: game.score,
+						type: 'appear', in: { x: line, y: column}, value: game.grid[line][column]
+					});
 				}
 			}
 
 			game.score = previousState.score;
 
-			notifyAll({ size: game.size, grid: game.grid, score: game.score });
+			//notifyAll({ size: game.size, grid: game.grid, score: game.score });
 		}
 
 		function saveState() {
@@ -89,7 +113,7 @@ export default function startGame(initialSize) {
 
 			notifyAll({
 				size: game.size, grid: game.grid, score: game.score,
-				type: 'move', from: { x: x2, y: y2 }, to: { x: x1, y: y1 }
+				type: 'move', from: { x: x2, y: y2 }, to: { x: x1, y: y1 }, value: game.grid[x1][y1]
 			});
 		}
 
@@ -106,7 +130,7 @@ export default function startGame(initialSize) {
 
 			notifyAll({
 				size: game.size, grid: game.grid, score: game.score,
-				type: 'join', to: { x: xIn, y: yIn }, from: { x: xErase, y: yErase }
+				type: 'join', to: { x: xIn, y: yIn }, from: { x: xErase, y: yErase }, value: game.grid[xIn][yIn] - 1
 			});
 		}
 
@@ -114,7 +138,7 @@ export default function startGame(initialSize) {
 			const position = newBlock(game);
 			notifyAll({
 				size: game.size, grid: game.grid, score: game.score,
-				type: 'appear', in: { x: position.x, y: position.y }
+				type: 'appear', in: { x: position.x, y: position.y}, value: game.grid[position.x][position.y]
 			});
 		}
 

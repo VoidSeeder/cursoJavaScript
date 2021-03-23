@@ -11,66 +11,53 @@ export default function newGraphicCanvas(windowInput, canvasId) {
 	}
 
 	let animationsList = [];
-	let lastAddedAnimation = {
-		from: 0,
-		to: 0
-	};
 
 	function stateUpdate(gameStateObj) {
-		state.size = gameStateObj.size;
-		state.grid = gameStateObj.grid;
+		if (state.size != gameStateObj.size) {
+			state.size = gameStateObj.size;
+
+			state.grid = new Array(state.size);
+		}
 
 		if (gameStateObj.type) {
 			const moveTypes = {
 				move() {
-					if (lastAddedAnimation.to.x == gameStateObj.from.x && lastAddedAnimation.to.y == gameStateObj.from.y) {
-						animationsList.pop();
-
-						lastAddedAnimation = {
-							type: gameStateObj.type,
-							from: lastAddedAnimation.from,
-							to: gameStateObj.to,
-							value: state.grid[gameStateObj.to.x][gameStateObj.to.y],
-							progress: 0
-						};
-
-						animationsList.push(lastAddedAnimation);
-					} else {
-						lastAddedAnimation = {
-							type: gameStateObj.type,
-							from: gameStateObj.from,
-							to: gameStateObj.to,
-							value: state.grid[gameStateObj.to.x][gameStateObj.to.y],
-							progress: 0
-						};
-
-						animationsList.push(lastAddedAnimation);
-					}
-
-					//console.log(`move animation registred do valor ${2**state.grid[gameStateObj.to.x][gameStateObj.to.y]} de (${gameStateObj.from.x},${gameStateObj.from.y}) para (${gameStateObj.to.x},${gameStateObj.to.y})`);
+					animationsList.push({
+						type: gameStateObj.type,
+						from: gameStateObj.from,
+						to: gameStateObj.to,
+						value: gameStateObj.value,
+						progress: 0
+					});
 				},
 				join() {
 					animationsList.push({
 						type: gameStateObj.type,
 						from: gameStateObj.from,
 						to: gameStateObj.to,
-						value: state.grid[gameStateObj.to.x][gameStateObj.to.y] - 1,
+						value: gameStateObj.value,
 						progress: 0
 					});
-
-					//console.log(`join animation registred do valor ${2**(state.grid[gameStateObj.to.x][gameStateObj.to.y] - 1)} de (${gameStateObj.from.x},${gameStateObj.from.y}) para (${gameStateObj.to.x},${gameStateObj.to.y})`)
 				},
 				appear() {
 					animationsList.push({
 						type: gameStateObj.type,
 						in: gameStateObj.in,
-						value: state.grid[gameStateObj.in.x][gameStateObj.in.y],
+						value: gameStateObj.value,
 						progress: 0
 					});
+				},
+				newGame() {
+					for (let position = 0; position < state.size; position++) {
+						state.grid[position] = new Array(state.size);
+						state.grid[position].fill(0);
+					}
 				}
 			}
 
-			moveTypes[gameStateObj.type]();
+			if(moveTypes[gameStateObj.type]) {
+				moveTypes[gameStateObj.type]();
+			}
 		}
 	}
 
@@ -80,11 +67,15 @@ export default function newGraphicCanvas(windowInput, canvasId) {
 		screen.clearRect(0, 0, canvas.width, canvas.height);
 
 		const block = {
-			size: {
-				width: (canvas.width - (state.size * 5) - 5) / state.size,
-				height: (canvas.height - (state.size * 5) - 5) / state.size
-			},
-			space: 5
+			size: null,
+			space: null
+		}
+
+		block.space = 80 / state.size;
+
+		block.size = {
+			width: (canvas.width - (state.size * block.space) - block.space) / state.size,
+			height: (canvas.height - (state.size * block.space) - block.space) / state.size
 		}
 
 		screen.textBaseline = 'middle';
@@ -108,39 +99,7 @@ export default function newGraphicCanvas(windowInput, canvasId) {
 
 		for (let line in state.grid) {
 			for (let column in state.grid[line]) {
-				let element = state.grid[line][column];
-
-				let printParam = {
-					init: {
-						x: block.space + column * (block.size.width + block.space),
-						y: block.space + line * (block.size.height + block.space)
-					},
-					size: block.size,
-					textPosition: null
-				}
-
-				printParam.textPosition = {
-					x: printParam.init.x + (printParam.size.width / 2),
-					y: printParam.init.y + (printParam.size.height / 2)
-				}
-
-
-				if (element != 0) {
-					screen.fillStyle = color.notEmptyBlock(element);
-					screen.fillRect(printParam.init.x, printParam.init.y, printParam.size.width, printParam.size.height);
-
-					screen.fillStyle = color.text;
-					if (String(2 ** element).length < 3) {
-						screen.font = `bold ${(2 / 3) * block.size.height}px Arial`;
-						screen.fillText(String(2 ** element), printParam.textPosition.x, printParam.textPosition.y);
-					} else {
-						screen.font = `bold ${(2 / String(2 ** element).length) * (2 / 3) * block.size.height}px Arial`;
-						screen.fillText(String(2 ** element), printParam.textPosition.x, printParam.textPosition.y);
-					}
-				} else {
-					screen.fillStyle = color.emptyBlock;
-					screen.fillRect(printParam.init.x, printParam.init.y, printParam.size.width, printParam.size.height);
-				}
+				printBlock(line, column, state.grid[line][column]);
 			}
 		}
 
@@ -148,14 +107,144 @@ export default function newGraphicCanvas(windowInput, canvasId) {
 
 		function runAnimations() {
 			const animation = animationsList[0];
+			const animationStep = 20;
+
+			const moves = {
+				move() {
+					//printa o bloco em movimento
+					if (animation.to.x != animation.from.x) {
+						//vertical
+						let progressRelation = (animation.to.x > animation.from.x) ? (animation.progress) : (100 - animation.progress);
+						let blocksToMove = (Math.abs(animation.to.x - animation.from.x)) * (progressRelation) / 100;
+						let absoluteBlockPosition = (animation.to.x > animation.from.x) ? (animation.from.x + blocksToMove) : (animation.to.x + blocksToMove);
+
+						printBlock(absoluteBlockPosition, animation.to.y, animation.value);
+					} else {
+						//horizontal
+						let progressRelation = (animation.to.y > animation.from.y) ? (animation.progress) : (100 - animation.progress);
+						let blocksToMove = (Math.abs(animation.to.y - animation.from.y)) * (progressRelation) / 100;
+						let absoluteBlockPosition = (animation.to.y > animation.from.y) ? (animation.from.y + blocksToMove) : (animation.to.y + blocksToMove);
+
+						printBlock(animation.to.x, absoluteBlockPosition, animation.value);
+					}
+				},
+				join() {
+					//printa o bloco em movimento
+					if (animation.to.x != animation.from.x) {
+						//vertical
+						let progressRelation = (animation.to.x > animation.from.x) ? (animation.progress) : (100 - animation.progress);
+						let blocksToMove = (Math.abs(animation.to.x - animation.from.x)) * (progressRelation) / 100;
+						let absoluteBlockPosition = (animation.to.x > animation.from.x) ? (animation.from.x + blocksToMove) : (animation.to.x + blocksToMove);
+
+						printBlock(absoluteBlockPosition, animation.to.y, animation.value);
+					} else {
+						//horizontal
+						let progressRelation = (animation.to.y > animation.from.y) ? (animation.progress) : (100 - animation.progress);
+						let blocksToMove = (Math.abs(animation.to.y - animation.from.y)) * (progressRelation) / 100;
+						let absoluteBlockPosition = (animation.to.y > animation.from.y) ? (animation.from.y + blocksToMove) : (animation.to.y + blocksToMove);
+
+						printBlock(animation.to.x, absoluteBlockPosition, animation.value);
+					}
+
+					//printa o bloco novo
+					printBlock(animation.to.x, animation.to.y, animation.value);
+
+					let size = block.size.width + 2 * block.space;
+
+					//penultimo passo
+					if (animation.progress + (3 * animationStep) >= 100) {
+						printBlock(animation.to.x, animation.to.y, animation.value, size, size);
+					}
+
+					//ultimo passo
+					if (animation.progress + animationStep >= 100) {
+
+						printBlock(animation.to.x, animation.to.y, animation.value + 1, size, size);
+					}
+				},
+				appear() {
+					let size = block.size.width * animation.progress / 100;
+					printBlock(animation.in.x, animation.in.y, animation.value, size, size);
+				}
+			}
+
+			const begin = {
+				move(animationObj) {
+					state.grid[animationObj.from.x][animationObj.from.y] = 0;
+				},
+				join(animationObj) {
+					state.grid[animationObj.from.x][animationObj.from.y] = 0;
+				},
+				appear(animationObj) {
+
+				}
+			}
+
+			const finish = {
+				move(animationObj) {
+					state.grid[animationObj.to.x][animationObj.to.y] = animationObj.value;
+				},
+				join(animationObj) {
+					state.grid[animationObj.to.x][animationObj.to.y] = animationObj.value + 1;
+				},
+				appear(animationObj) {
+					state.grid[animationObj.in.x][animationObj.in.y] = animationObj.value;
+				}
+			}
 
 			if (animation) {
-				animation.progress += 20;
+				if (animation.progress == 0) {
+					begin[animation.type](animation);
+				}
 
-				if (animation.progress == 100) {
+				if (moves[animation.type]) {
+					moves[animation.type]();
+				}
+
+				animation.progress += animationStep;
+
+				if (animation.progress >= 100) {
 					console.log(`animated ${animationsList[0].type}`);
+					finish[animation.type](animation);
 					animationsList.shift();
 				}
+			}
+		}
+
+		function printBlock(x, y, value, width = block.size.width, height = block.size.height) {
+			let printParam = {
+				init: {
+					x: block.space + y * (block.size.width + block.space),
+					y: block.space + x * (block.size.height + block.space)
+				},
+				size: block.size,
+				textPosition: null
+			}
+
+			printParam.textPosition = {
+				x: printParam.init.x + (printParam.size.width / 2),
+				y: printParam.init.y + (printParam.size.height / 2)
+			}
+
+			if (value != 0) {
+				screen.fillStyle = color.notEmptyBlock(value);
+
+				printParam.init.x += (block.size.width / 2) - (width / 2);
+				printParam.init.y += (block.size.height / 2) - (height / 2);
+
+				screen.fillRect(printParam.init.x, printParam.init.y, width, height);
+
+				screen.fillStyle = color.text;
+				if (String(2 ** value).length < 3) {
+					screen.font = `bold ${(2 / 3) * height}px Arial`;
+					screen.fillText(String(2 ** value), printParam.textPosition.x, printParam.textPosition.y);
+				} else {
+					screen.font = `bold ${(2 / String(2 ** value).length) * (2 / 3) * height}px Arial`;
+					screen.fillText(String(2 ** value), printParam.textPosition.x, printParam.textPosition.y);
+				}
+			} else {
+				screen.fillStyle = color.emptyBlock;
+				screen.fillRect(printParam.init.x, printParam.init.y, printParam.size.width, printParam.size.height);
 			}
 		}
 
